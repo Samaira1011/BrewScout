@@ -1,0 +1,2 @@
+import { AuthForm } from "@/components/auth-form";
+export default function SignIn() { return <main className="grid min-h-[calc(100vh-73px)] place-items-center px-5 py-14"><section className="w-full max-w-md rounded-[2rem] bg-white p-8 card-shadow"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#c9ff4d] text-xl font-black">V</span><p className="mt-7 text-sm font-black uppercase tracking-[.2em] text-[#7441b5]">Welcome back</p><h1 className="mt-2 text-4xl font-black">Sign in to VibeCheck</h1><AuthForm mode="signin" /></section></main>; }

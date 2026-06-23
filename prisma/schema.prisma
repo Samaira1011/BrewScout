@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated-client2"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String             @id @default(uuid())
+  firebaseUid       String             @unique
+  email             String             @unique
+  role              String
+  points            Int                @default(0)
+  level             String             @default("BRONZE") // BRONZE, SILVER, GOLD
+  name              String?
+  phoneNumber       String?
+  photoUrl          String?
+  bio               String?
+  instagram         String?
+  twitter           String?
+  city              String?
+  favoriteCoffee    String?
+  gender            String?
+  dob               DateTime?
+  createdAt         DateTime           @default(now())
+  ownedCafes        CafePage[]
+  reviews           Review[]
+  replies           Reply[]
+  claimRequests     ClaimRequest[]
+  reports           Report[]
+  pointTransactions PointTransaction[]
+  redeemedVouchers  RedeemedVoucher[]
+}
+
+model CafePage {
+  id               String            @id @default(uuid())
+  slug             String            @unique
+  name             String
+  address          String
+  city             String
+  neighborhood     String?
+  postalCode       String?
+  openingHours     String
+  menuDesc         String?
+  menuPhotoUrl     String?
+  description      String?
+  instagramUrl     String?
+  gradient         String            @default("from-[#ff9a8b] to-[#ff6a88]")
+  ownerId          String?
+  isVerified       Boolean           @default(false)
+  businessProofUrl String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  ratingSum        Int               @default(0)
+  reviewCount      Int               @default(0)
+  owner            User?             @relation(fields: [ownerId], references: [id])
+  photos           CafePhoto[]
+  vibeTags         CafeVibeTag[]
+  foodTypeTags     CafeFoodTypeTag[]
+  reviews          Review[]
+  claimRequests    ClaimRequest[]
+  featuredListings FeaturedListing[]
+  events           Event[]
+  flashDeals       FlashDeal[]
+  premium          PremiumSubscription?
+  vouchers         RewardVoucher[]
+  quests           Quest[]
+
+  @@unique([name, address])
+}
+
+model CafePhoto {
+  id                 String   @id @default(uuid())
+  cafeId             String
+  cloudinaryPublicId String
+  cloudinaryUrl      String
+  isPrimary          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  cafe               CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model VibeTag {
+  id    String        @id @default(uuid())
+  name  String        @unique
+  cafes CafeVibeTag[]
+}
+
+model FoodTypeTag {
+  id    String            @id @default(uuid())
+  name  String            @unique
+  cafes CafeFoodTypeTag[]
+}
+
+model CafeVibeTag {
+  cafeId    String
+  vibeTagId String
+  cafe      CafePage @relation(fields: [cafeId], references: [id])
+  tag       VibeTag  @relation(fields: [vibeTagId], references: [id])
+
+  @@id([cafeId, vibeTagId])
+}
+
+model CafeFoodTypeTag {
+  cafeId     String
+  foodTypeId String
+  cafe       CafePage    @relation(fields: [cafeId], references: [id])
+  tag        FoodTypeTag @relation(fields: [foodTypeId], references: [id])
+
+  @@id([cafeId, foodTypeId])
+}
+
+model Review {
+  id            String               @id @default(uuid())
+  cafeId        String
+  authorId      String
+  rating        Int
+  body          String?
+  isVerified    Boolean              @default(false)
+  isRemoved     Boolean              @default(false)
+  isApproved    Boolean              @default(false)
+  createdAt     DateTime             @default(now())
+  cafe          CafePage             @relation(fields: [cafeId], references: [id])
+  author        User                 @relation(fields: [authorId], references: [id])
+  photos        ReviewPhoto[]
+  receipt       Receipt?
+  reply         Reply?
+  reports       Report[]
+  removalNotice RemovedReviewNotice?
+
+  @@unique([cafeId, authorId])
+}
+
+model ReviewPhoto {
+  id                 String @id @default(uuid())
+  reviewId           String
+  cloudinaryPublicId String
+  cloudinaryUrl      String
+  review             Review @relation(fields: [reviewId], references: [id])
+}
+
+model Receipt {
+  id                 String   @id @default(uuid())
+  reviewId           String   @unique
+  cloudinaryPublicId String
+  mimeType           String
+  sizeBytes          Int
+  uploadedAt         DateTime @default(now())
+  review             Review   @relation(fields: [reviewId], references: [id])
+}
+
+model Reply {
+  id        String   @id @default(uuid())
+  reviewId  String   @unique
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [reviewId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model ClaimRequest {
+  id          String    @id @default(uuid())
+  cafeId      String
+  requesterId String
+  status      String    @default("PENDING")
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  cafe        CafePage  @relation(fields: [cafeId], references: [id])
+  requester   User      @relation(fields: [requesterId], references: [id])
+
+  @@unique([cafeId, requesterId])
+}
+
+model Report {
+  id         String    @id @default(uuid())
+  reviewId   String
+  reporterId String
+  reason     String
+  status     String    @default("PENDING")
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+  review     Review    @relation(fields: [reviewId], references: [id])
+  reporter   User      @relation(fields: [reporterId], references: [id])
+}
+
+model RemovedReviewNotice {
+  id        String   @id @default(uuid())
+  reviewId  String   @unique
+  cafeId    String
+  removedAt DateTime @default(now())
+  adminNote String?
+  review    Review   @relation(fields: [reviewId], references: [id])
+}
+
+model FeaturedListing {
+  id        String   @id @default(uuid())
+  cafeId    String
+  startsAt  DateTime
+  endsAt    DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  cafe      CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model Event {
+  id                      String   @id @default(uuid())
+  cafeId                  String
+  title                   String
+  description             String
+  eventAt                 DateTime
+  coverCloudinaryPublicId String?
+  coverCloudinaryUrl      String?
+  createdAt               DateTime @default(now())
+  cafe                    CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model FlashDeal {
+  id          String   @id @default(uuid())
+  cafeId      String
+  title       String
+  description String
+  terms       String?
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime @default(now())
+  cafe        CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model PremiumSubscription {
+  id                     String   @id @default(uuid())
+  cafeId                 String   @unique
+  whatsappNumber         String?
+  menuCloudinaryPublicId String?
+  menuQrCodeUrl          String?
+  videoUrl               String?
+  status                 String   @default("ACTIVE")
+  startsAt               DateTime @default(now())
+  endsAt                 DateTime
+  cafe                   CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model PointTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int      // Positive for earning, negative for spending
+  action    String   // e.g. "REVIEW_SUBMITTED", "RECEIPT_VERIFIED", "VOUCHER_REDEEMED", "QUEST_COMPLETED"
+  reference String?  // ID of the related review or voucher
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model RewardVoucher {
+  id          String            @id @default(uuid())
+  cafeId      String
+  title       String            // e.g. "Free Croissant with any brew"
+  description String
+  pointsCost  Int
+  code        String            // Unique claim code pattern
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  cafe        CafePage          @relation(fields: [cafeId], references: [id])
+  redemptions RedeemedVoucher[]
+}
+
+model RedeemedVoucher {
+  id         String        @id @default(uuid())
+  userId     String
+  voucherId  String
+  claimCode  String        // Copy of the voucher code for the user
+  isUsed     Boolean       @default(false)
+  redeemedAt DateTime      @default(now())
+  usedAt     DateTime?
+  user       User          @relation(fields: [userId], references: [id])
+  voucher    RewardVoucher @relation(fields: [voucherId], references: [id])
+}
+
+model Quest {
+  id          String   @id @default(uuid())
+  cafeId      String
+  title       String   // e.g. "Indiranagar Sunday Rush"
+  description String   // e.g. "Submit a verified receipt review at The Vintage Bean this Sunday"
+  bonusPoints Int      @default(100)
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean  @default(true)
+  cafe        CafePage @relation(fields: [cafeId], references: [id])
+}
