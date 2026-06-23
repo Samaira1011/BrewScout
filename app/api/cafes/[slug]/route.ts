@@ -67,7 +67,8 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
           orderBy: { createdAt: "desc" },
           include: { 
             author: true,
-            receipt: true
+            receipt: true,
+            photos: true
           }
         }
       }
@@ -83,6 +84,7 @@ export async function GET(_: Request, { params }: { params: { slug: string } }) 
       verified: r.isVerified,
       body: r.body || "",
       receiptUrl: r.receipt?.cloudinaryPublicId || null,
+      photos: r.photos.map(p => p.cloudinaryUrl),
       date: getRelativeTimeString(r.createdAt)
     }));
 
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
     }
 
     const bodyJson = await request.json();
-    const { rating, body, receiptUrl } = bodyJson;
+    const { rating, body, receiptUrl, reviewImages } = bodyJson;
 
     if (!rating || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "Invalid rating" }, { status: 400 });
@@ -180,6 +182,29 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
           }
         });
       }
+
+      if (reviewImages && reviewImages.length > 0) {
+        // Delete old review photos
+        await prisma.reviewPhoto.deleteMany({
+          where: { reviewId: existingReview.id }
+        });
+        
+        // Save new review photos
+        for (const imgBase64 of reviewImages) {
+          try {
+            const photoUrl = await saveLocalFile(imgBase64, "review-photo");
+            await prisma.reviewPhoto.create({
+              data: {
+                reviewId: existingReview.id,
+                cloudinaryPublicId: photoUrl,
+                cloudinaryUrl: photoUrl
+              }
+            });
+          } catch (err) {
+            console.error("Failed to save review photo:", err);
+          }
+        }
+      }
     } else {
       // Create new review (unapproved by default)
       const newReview = await prisma.review.create({
@@ -202,6 +227,23 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
             sizeBytes: 100000
           }
         });
+      }
+
+      if (reviewImages && reviewImages.length > 0) {
+        for (const imgBase64 of reviewImages) {
+          try {
+            const photoUrl = await saveLocalFile(imgBase64, "review-photo");
+            await prisma.reviewPhoto.create({
+              data: {
+                reviewId: newReview.id,
+                cloudinaryPublicId: photoUrl,
+                cloudinaryUrl: photoUrl
+              }
+            });
+          } catch (err) {
+            console.error("Failed to save review photo:", err);
+          }
+        }
       }
     }
 

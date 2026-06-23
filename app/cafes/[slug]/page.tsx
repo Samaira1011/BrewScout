@@ -54,7 +54,8 @@ export default async function CafePage({ params }: { params: { slug: string } })
         include: { 
           author: true,
           receipt: true,
-          reply: true
+          reply: true,
+          photos: true
         }
       }
     }
@@ -92,6 +93,7 @@ export default async function CafePage({ params }: { params: { slug: string } })
     verified: r.isVerified,
     body: r.body || "",
     receiptUrl: r.receipt?.cloudinaryPublicId || null,
+    photos: r.photos.map(p => p.cloudinaryUrl),
     date: getRelativeTimeString(r.createdAt),
     reply: r.reply ? {
       body: r.reply.body,
@@ -100,6 +102,7 @@ export default async function CafePage({ params }: { params: { slug: string } })
   }));
 
   const showNoticeBanner = !cafe.isVerified && (user && (user.id === cafe.ownerId || user.role === "ADMIN"));
+  const primaryPhoto = cafe.photos.find(p => p.isPrimary);
 
   return <main className="min-h-screen pb-20">
     {showNoticeBanner && (
@@ -107,7 +110,18 @@ export default async function CafePage({ params }: { params: { slug: string } })
         <span>⚠️ This cafe listing is currently pending admin verification. It is not visible to the public.</span>
       </div>
     )}
-    <section className={`h-72 bg-gradient-to-br ${mappedCafe.gradient} md:h-96`} />
+    <section className={`relative h-72 bg-gradient-to-br ${mappedCafe.gradient} md:h-96 overflow-hidden`}>
+      {primaryPhoto && (
+        <>
+          <img 
+            src={primaryPhoto.cloudinaryUrl} 
+            alt={mappedCafe.name} 
+            className="absolute inset-0 h-full w-full object-cover opacity-75"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        </>
+      )}
+    </section>
     <section className="mx-auto -mt-14 grid max-w-7xl gap-8 px-5 md:px-8 lg:grid-cols-[1fr_340px]">
       <div>
         <div className="rounded-[2rem] bg-white p-7 card-shadow md:p-10">

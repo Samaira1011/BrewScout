@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
+import { SideBySidePreview } from "./side-by-side-preview";
 
 interface CafeFormProps {
   initialData?: {
@@ -112,6 +113,22 @@ export function CafeForm({ initialData }: CafeFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const [previewingImages, setPreviewingImages] = useState<string[] | null>(null);
+  const [previewingInitialIndex, setPreviewingInitialIndex] = useState<number>(0);
+
+  const triggerPreview = (clickedUrlOrBase64: string) => {
+    const list: string[] = [];
+    if (coverPreview) list.push(coverPreview);
+    if (menuPreview) list.push(menuPreview);
+    if (proofPreview) list.push(proofPreview);
+    existingGalleryUrls.forEach(url => list.push(url));
+    galleryImages.forEach(base64 => list.push(base64));
+
+    const idx = list.indexOf(clickedUrlOrBase64);
+    setPreviewingImages(list);
+    setPreviewingInitialIndex(idx >= 0 ? idx : 0);
+  };
 
   // Tag helper actions
   const toggleVibe = (vibe: string) => {
@@ -473,8 +490,14 @@ export function CafeForm({ initialData }: CafeFormProps) {
               />
             </label>
             {coverPreview && (
-              <div className="relative h-20 w-36 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5">
+              <div 
+                onClick={() => triggerPreview(coverPreview)}
+                className="relative h-20 w-36 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5 cursor-zoom-in group"
+              >
                 <img src={coverPreview} alt="Cover Preview" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
               </div>
             )}
           </div>
@@ -588,12 +611,22 @@ export function CafeForm({ initialData }: CafeFormProps) {
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
             {/* Display Pre-existing Gallery */}
             {existingGalleryUrls.map((url, index) => (
-              <div key={url} className="relative aspect-square rounded-2xl overflow-hidden border border-[#e7dff0] bg-black/5 group">
+              <div 
+                key={url} 
+                onClick={() => triggerPreview(url)}
+                className="relative aspect-square rounded-2xl overflow-hidden border border-[#e7dff0] bg-black/5 group cursor-zoom-in"
+              >
                 <img src={url} alt="Gallery item" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
                 <button
                   type="button"
-                  onClick={() => removeGalleryImage(index, true)}
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/75 text-white flex items-center justify-center text-xs font-bold hover:bg-red-600 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeGalleryImage(index, true);
+                  }}
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/75 text-white flex items-center justify-center text-xs font-bold hover:bg-red-600 transition z-10"
                 >
                   ✕
                 </button>
@@ -602,12 +635,22 @@ export function CafeForm({ initialData }: CafeFormProps) {
 
             {/* Display Newly Uploaded Gallery */}
             {galleryImages.map((base64, index) => (
-              <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-[#e7dff0] bg-black/5 group">
+              <div 
+                key={index} 
+                onClick={() => triggerPreview(base64)}
+                className="relative aspect-square rounded-2xl overflow-hidden border border-[#e7dff0] bg-black/5 group cursor-zoom-in"
+              >
                 <img src={base64} alt="Gallery item upload" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
                 <button
                   type="button"
-                  onClick={() => removeGalleryImage(index, false)}
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/75 text-white flex items-center justify-center text-xs font-bold hover:bg-red-600 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeGalleryImage(index, false);
+                  }}
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/75 text-white flex items-center justify-center text-xs font-bold hover:bg-red-600 transition z-10"
                 >
                   ✕
                 </button>
@@ -672,8 +715,14 @@ export function CafeForm({ initialData }: CafeFormProps) {
               />
             </label>
             {menuPreview && (
-              <div className="relative h-20 w-36 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5">
+              <div 
+                onClick={() => triggerPreview(menuPreview)}
+                className="relative h-20 w-36 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5 cursor-zoom-in group"
+              >
                 <img src={menuPreview} alt="Menu Preview" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
               </div>
             )}
           </div>
@@ -719,8 +768,14 @@ export function CafeForm({ initialData }: CafeFormProps) {
               />
             </label>
             {proofPreview && (
-              <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5 flex items-center justify-center">
+              <div 
+                onClick={() => triggerPreview(proofPreview)}
+                className="relative h-20 w-20 rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5 flex items-center justify-center cursor-zoom-in group"
+              >
                 <img src={proofPreview} alt="Verification Document" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
               </div>
             )}
           </div>
@@ -743,6 +798,14 @@ export function CafeForm({ initialData }: CafeFormProps) {
           {loading ? "Submitting..." : isEdit ? "Save Changes" : "Submit & Request Verification"}
         </button>
       </div>
+
+      {previewingImages && previewingImages.length > 0 && (
+        <SideBySidePreview
+          images={previewingImages}
+          initialSelectedIndex={previewingInitialIndex}
+          onClose={() => setPreviewingImages(null)}
+        />
+      )}
     </form>
   );
 }

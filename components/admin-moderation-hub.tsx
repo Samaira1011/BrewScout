@@ -434,15 +434,22 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
 
                     {/* Verification Document Preview */}
                     <div className="flex flex-col justify-center items-center">
-                      <button 
-                        onClick={() => setLightboxUrl(c.businessProofUrl)} 
-                        className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black/5 border border-[#e7dff0] flex items-center justify-center hover:opacity-95 transition group"
-                      >
-                        <img src={c.businessProofUrl} alt="business proof document" className="max-h-full max-w-full object-contain" />
-                        <span className="absolute inset-0 bg-black/40 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                          🔍 Zoom Document
-                        </span>
-                      </button>
+                      {c.businessProofUrl ? (
+                        <button 
+                          onClick={() => setLightboxUrl(c.businessProofUrl)} 
+                          className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black/5 border border-[#e7dff0] flex items-center justify-center hover:opacity-95 transition group"
+                        >
+                          <img src={c.businessProofUrl} alt="business proof document" className="max-h-full max-w-full object-contain" />
+                          <span className="absolute inset-0 bg-black/40 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            🔍 Zoom Document
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="w-full aspect-[4/3] rounded-2xl border border-dashed border-[#e7dff0] bg-[#fbf9ff] flex flex-col items-center justify-center text-[#756a7d] p-3 text-center">
+                          <span className="text-xl">📄</span>
+                          <span className="text-[10px] font-bold mt-1">No Proof Uploaded</span>
+                        </div>
+                      )}
                       <span className="text-[10px] text-[#756a7d] font-semibold mt-2">
                         Submitted: {new Date(c.createdAt).toLocaleDateString()}
                       </span>

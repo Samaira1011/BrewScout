@@ -58,8 +58,7 @@ export default async function AdminPage() {
   // 2b. Fetch pending unverified cafe listings
   const pendingCafes = await prisma.cafePage.findMany({
     where: {
-      isVerified: false,
-      businessProofUrl: { not: null }
+      isVerified: false
     },
     include: {
       owner: true

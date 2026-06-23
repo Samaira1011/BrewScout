@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { CameraCapture } from "./camera-capture";
+import { SideBySidePreview } from "./side-by-side-preview";
 
 type Review = { 
   author: string; 
@@ -10,6 +11,7 @@ type Review = {
   body: string; 
   date: string; 
   receiptUrl?: string | null;
+  photos?: string[];
   reply?: {
     body: string;
     date: string;
@@ -30,7 +32,61 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
   const [signature, setSignature] = useState("");
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [receiptImage, setReceiptImage] = useState<string | null>(null); // base64
+  const [reviewImages, setReviewImages] = useState<string[]>([]); // array of base64
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Clickable Side-by-Side Previewer State
+  const [previewingImages, setPreviewingImages] = useState<string[] | null>(null);
+  const [previewingInitialIndex, setPreviewingInitialIndex] = useState<number>(0);
+
+  const triggerPreview = (clickedImage: string) => {
+    const list: string[] = [];
+    if (receiptImage) list.push(receiptImage);
+    reviewImages.forEach(img => list.push(img));
+
+    const idx = list.indexOf(clickedImage);
+    setPreviewingImages(list);
+    setPreviewingInitialIndex(idx >= 0 ? idx : 0);
+  };
+
+  const removeReviewImage = (index: number) => {
+    setReviewImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const processReviewFile = (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size exceeds 10MB limit.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setReviewImages(prev => [...prev, reader.result as string]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleReviewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    for (let i = 0; i < files.length; i++) {
+      processReviewFile(files[i]);
+    }
+  };
+
+  const handleReviewPaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          processReviewFile(file);
+        }
+      }
+    }
+  };
 
   useEffect(() => setVerifiedOnly(sessionStorage.getItem("verifiedOnly") === "true"), []);
 
@@ -49,6 +105,8 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
     setSignature("");
     setWaiverAgreed(false);
     setReceiptImage(null);
+    setReviewImages([]);
+    setPreviewingImages(null);
   }
 
   async function submit(event: FormEvent) {
@@ -80,7 +138,7 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
       const res = await fetch(`/api/cafes/${slug}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, body, receiptUrl }),
+        body: JSON.stringify({ rating, body, receiptUrl, reviewImages }),
       });
 
       if (!res.ok) {
@@ -98,6 +156,7 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
           verified: false, // Pending admin approval
           body, 
           receiptUrl: verifyVisit ? receiptImage : null,
+          photos: reviewImages,
           date: "Just now (pending verification)" 
         }, 
         ...current
@@ -141,6 +200,27 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
               🔍 Zoom Bill
             </span>
           </button>
+        </div>
+      )}
+
+      {review.photos && review.photos.length > 0 && (
+        <div className="mt-4 flex flex-col items-start gap-2 border-t border-[#f4eff9] pt-4">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#756a7d]">Attached Photos</span>
+          <div className="flex flex-wrap gap-2">
+            {review.photos.map((photoUrl, pIdx) => (
+              <button
+                key={pIdx}
+                type="button"
+                onClick={() => setLightboxUrl(photoUrl)}
+                className="relative w-20 aspect-square rounded-xl overflow-hidden bg-black/5 border border-[#e7dff0] flex items-center justify-center hover:opacity-90 transition group cursor-zoom-in"
+              >
+                <img src={photoUrl} alt="Review attachment" className="h-full w-full object-cover" />
+                <span className="absolute inset-0 bg-black/40 text-white text-[9px] font-black uppercase tracking-wider flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  🔍 View
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -191,6 +271,57 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
         <label className="mt-4 block text-sm font-bold">Your review
           <textarea required maxLength={1000} value={body} onChange={event => setBody(event.target.value)} rows={4} className="mt-2 w-full resize-none rounded-xl border border-[#e7dff0] px-4 py-3 outline-[#7441b5]" placeholder="What stood out? (ambience, coffee, noise levels, seating...)" />
         </label>
+
+        {/* Upload Review Photos (Multiple Allowed) */}
+        <div className="mt-6 border-t border-[#e7dff0] pt-5 space-y-4">
+          <div>
+            <span className="block text-sm font-bold text-[#564b60]">Attach Photos to Review</span>
+            <p className="text-xs text-[#756a7d] mt-0.5">Share photos of your coffee, food, or seat. You can also paste Ctrl+V here.</p>
+          </div>
+
+          <div className="grid gap-3 grid-cols-3 sm:grid-cols-4">
+            {/* Display Review Photo Previews */}
+            {reviewImages.map((base64, index) => (
+              <div 
+                key={index} 
+                onClick={() => triggerPreview(base64)}
+                className="relative aspect-square rounded-xl overflow-hidden border border-[#e7dff0] bg-black/5 group cursor-zoom-in"
+              >
+                <img src={base64} alt="Review item upload" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                  🔍 Compare
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeReviewImage(index);
+                  }}
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/75 text-white flex items-center justify-center text-[10px] font-bold hover:bg-red-600 transition z-10"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+
+            {/* Review Photo Upload slot */}
+            <label 
+              tabIndex={0}
+              onPaste={(e) => handleReviewPaste(e)}
+              className="flex aspect-square flex-col items-center justify-center rounded-xl border border-dashed border-[#7441b5]/30 bg-[#7441b5]/5 cursor-pointer font-bold text-[#7441b5] transition hover:bg-[#7441b5]/10 text-center p-2 outline-none focus:ring-2 focus:ring-[#7441b5]"
+            >
+              <span className="text-lg">📸</span>
+              <span className="text-[10px] mt-1">Add Photo</span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleReviewFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
 
         {/* Receipt Verification Wizard Switch */}
         <div className="mt-6 border-t border-[#e7dff0] pt-5">
@@ -295,12 +426,18 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
                     Retake / Change
                   </button>
                 </div>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black/5 border border-[#e7dff0] flex items-center justify-center">
+                <div 
+                  onClick={() => triggerPreview(receiptImage)}
+                  className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black/5 border border-[#e7dff0] flex items-center justify-center cursor-zoom-in group"
+                >
                   <img 
                     src={receiptImage} 
                     alt="Receipt preview" 
                     className="max-h-full max-w-full object-contain"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider transition">
+                    🔍 Compare
+                  </div>
                 </div>
                 <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs font-medium text-green-800 flex items-center gap-2">
                   <span>✅</span>
@@ -328,6 +465,13 @@ export function ReviewExperience({ slug, initialReviews }: { slug: string; initi
             "Publish review"
           )}
         </button>
+        {previewingImages && previewingImages.length > 0 && (
+          <SideBySidePreview
+            images={previewingImages}
+            initialSelectedIndex={previewingInitialIndex}
+            onClose={() => setPreviewingImages(null)}
+          />
+        )}
       </form>
     </div>}
   </div>;

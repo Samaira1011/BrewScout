@@ -50,3 +50,5 @@ prisma/generated-client2/
 # Kiro files
 .kiro/
 
+# Local user uploads
+public/uploads/
