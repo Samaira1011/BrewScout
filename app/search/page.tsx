@@ -42,6 +42,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
   const results = await prisma.cafePage.findMany({
     where: whereClause,
     include: {
+      photos: true,
       vibeTags: {
         include: {
           tag: true
@@ -65,6 +66,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
     vibe: c.vibeTags.map(vt => vt.tag.name),
     food: c.foodTypeTags.map(ft => ft.tag.name),
     gradient: c.gradient,
+    coverPhotoUrl: c.photos.find(p => p.isPrimary)?.cloudinaryUrl || null,
     description: c.description
   }));
 
@@ -97,7 +99,11 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cafes.map(cafe => (
             <Link href={`/cafes/${cafe.slug}`} key={cafe.slug} className="overflow-hidden rounded-[1.8rem] bg-white card-shadow transition hover:-translate-y-1">
-              <div className={`h-48 bg-gradient-to-br ${cafe.gradient} p-5`} />
+              <div className={`relative h-48 bg-gradient-to-br ${cafe.gradient} p-5 overflow-hidden`}>
+                {cafe.coverPhotoUrl && (
+                  <img src={cafe.coverPhotoUrl} alt={cafe.name} className="absolute inset-0 h-full w-full object-cover opacity-85" />
+                )}
+              </div>
               <div className="p-6">
                 <div className="flex justify-between gap-4">
                   <div>

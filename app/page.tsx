@@ -12,6 +12,7 @@ export default async function Home() {
   const verifiedCafes = await prisma.cafePage.findMany({
     where: { isVerified: true },
     include: {
+      photos: true,
       vibeTags: {
         include: {
           tag: true
@@ -28,6 +29,7 @@ export default async function Home() {
     area: cafe.neighborhood || cafe.city,
     score: cafe.reviewCount > 0 ? (cafe.ratingSum / cafe.reviewCount).toFixed(1) : "4.8",
     vibe: cafe.vibeTags[0]?.tag.name || "Cozy Vibe",
+    coverPhotoUrl: cafe.photos.find(p => p.isPrimary)?.cloudinaryUrl || null,
     gradient: cafe.gradient || "from-[#ff9a8b] to-[#ff6a88]"
   }));
 
@@ -84,7 +86,12 @@ export default async function Home() {
         ) : (
           <div className="mt-10 grid gap-6 md:grid-cols-3">{spots.map(spot =>
             <Link href={`/cafes/${spot.slug}`} key={spot.name} className="overflow-hidden rounded-[1.8rem] bg-white text-[#21152d] transition hover:-translate-y-1">
-              <div className={`h-52 bg-gradient-to-br ${spot.gradient} p-5`}><span className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-black">VERIFIED FAVORITE</span></div>
+              <div className={`relative h-52 bg-gradient-to-br ${spot.gradient} p-5 overflow-hidden`}>
+                {spot.coverPhotoUrl && (
+                  <img src={spot.coverPhotoUrl} alt={spot.name} className="absolute inset-0 h-full w-full object-cover opacity-85 animate-fade-in" />
+                )}
+                <span className="relative z-10 rounded-full bg-white/85 px-3 py-1.5 text-xs font-black">VERIFIED FAVORITE</span>
+              </div>
               <div className="p-6"><div className="flex items-start justify-between gap-4"><div><h3 className="text-2xl font-black">{spot.name}</h3><p className="mt-1 text-sm text-[#756a7d]">{spot.area} · {spot.vibe}</p></div><span className="rounded-full bg-[#c9ff4d] px-3 py-2 text-sm font-black">★ {spot.score}</span></div></div>
             </Link>)}</div>
         )}
