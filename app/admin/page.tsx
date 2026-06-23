@@ -81,6 +81,15 @@ export default async function AdminPage() {
     orderBy: { createdAt: "desc" }
   });
 
+  // 3b. Fetch pending student verifications
+  const pendingStudents = await prisma.studentVerification.findMany({
+    where: { status: "PENDING" },
+    include: {
+      user: true
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
   // Map to matching client components structures
   const mappedReceipts = pendingReviews.map(r => ({
     id: r.id,
@@ -120,6 +129,14 @@ export default async function AdminPage() {
     createdAt: rp.createdAt.toISOString()
   }));
 
+  const mappedStudents = pendingStudents.map(s => ({
+    id: s.id,
+    userEmail: s.user.email,
+    collegeName: s.collegeName,
+    studentCardUrl: s.studentCardUrl,
+    createdAt: s.createdAt.toISOString()
+  }));
+
   const allUsers = await prisma.user.findMany({
     orderBy: { createdAt: "desc" }
   });
@@ -149,6 +166,7 @@ export default async function AdminPage() {
             initialReports={mappedReports}
             initialCafes={mappedCafes}
             initialUsers={mappedUsers}
+            initialStudents={mappedStudents}
           />
         </div>
       </div>

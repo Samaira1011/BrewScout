@@ -56,6 +56,7 @@ describe("VibePoints Rewards & Validation integration tests", () => {
 
   afterAll(async () => {
     // Clean up test data in reverse dependency order
+    await prisma.studentVerification.deleteMany({ where: { userId: testUser.id } });
     await prisma.redeemedVoucher.deleteMany({ where: { voucherId: testVoucher.id } });
     await prisma.rewardVoucher.delete({ where: { id: testVoucher.id } });
     await prisma.pointTransaction.deleteMany({ where: { userId: testUser.id } });
@@ -161,4 +162,70 @@ describe("VibePoints Rewards & Validation integration tests", () => {
     });
     expect(checkUsed).toBeNull();
   });
+
+  it("handles student verification request and approval points reward correctly", async () => {
+    // 1. Check initial state
+    const userBefore = await prisma.user.findUnique({ where: { id: testUser.id } });
+    expect(userBefore?.isStudentVerified).toBe(false);
+
+    // 2. Create verification request
+    const verification = await prisma.studentVerification.create({
+      data: {
+        userId: testUser.id,
+        collegeName: "Test University",
+        studentCardUrl: "/uploads/student-card-test.jpg",
+        status: "PENDING"
+      }
+    });
+
+    expect(verification.status).toBe("PENDING");
+
+    // 3. Simulate Admin approval
+    const pointsToAward = 50;
+    const newPoints = (userBefore?.points || 0) + pointsToAward;
+    let newLevel = "BRONZE";
+    if (newPoints >= 500) newLevel = "GOLD";
+    else if (newPoints >= 200) newLevel = "SILVER";
+
+    await prisma.$transaction([
+      prisma.studentVerification.update({
+        where: { id: verification.id },
+        data: { status: "APPROVED", resolvedAt: new Date() }
+      }),
+      prisma.user.update({
+        where: { id: testUser.id },
+        data: { 
+          isStudentVerified: true,
+          points: newPoints,
+          level: newLevel
+        }
+      }),
+      prisma.pointTransaction.create({
+        data: {
+          userId: testUser.id,
+          amount: pointsToAward,
+          action: "STUDENT_VERIFIED",
+          reference: verification.id
+        }
+      })
+    ]);
+
+    // 4. Verify results
+    const userAfter = await prisma.user.findUnique({ where: { id: testUser.id } });
+    expect(userAfter?.isStudentVerified).toBe(true);
+    expect(userAfter?.points).toBe(userBefore!.points + 50);
+
+    const checkVerification = await prisma.studentVerification.findUnique({
+      where: { id: verification.id }
+    });
+    expect(checkVerification?.status).toBe("APPROVED");
+    expect(checkVerification?.resolvedAt).toBeDefined();
+
+    const checkTransaction = await prisma.pointTransaction.findFirst({
+      where: { userId: testUser.id, action: "STUDENT_VERIFIED" }
+    });
+    expect(checkTransaction).toBeDefined();
+    expect(checkTransaction?.amount).toBe(50);
+  });
 });
+

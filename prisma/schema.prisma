@@ -34,6 +34,8 @@ model User {
   reports           Report[]
   pointTransactions PointTransaction[]
   redeemedVouchers  RedeemedVoucher[]
+  isStudentVerified   Boolean            @default(false)
+  studentVerification StudentVerification?
 }
 
 model CafePage {
@@ -288,4 +290,15 @@ model Quest {
   endsAt      DateTime
   isActive    Boolean  @default(true)
   cafe        CafePage @relation(fields: [cafeId], references: [id])
+}
+
+model StudentVerification {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  collegeName    String
+  studentCardUrl String
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+  user           User      @relation(fields: [userId], references: [id])
 }

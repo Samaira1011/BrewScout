@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SideBySidePreview } from "./side-by-side-preview";
 
 interface AdminStats {
   totalCafes: number;
@@ -57,6 +58,14 @@ interface UserItem {
   createdAt: string;
 }
 
+interface StudentItem {
+  id: string;
+  userEmail: string;
+  collegeName: string;
+  studentCardUrl: string;
+  createdAt: string;
+}
+
 interface AdminModerationHubProps {
   stats: AdminStats;
   initialReceipts: ReceiptItem[];
@@ -64,20 +73,26 @@ interface AdminModerationHubProps {
   initialReports: ReportItem[];
   initialCafes: CafeListingItem[];
   initialUsers: UserItem[];
+  initialStudents: StudentItem[];
 }
 
 
-export function AdminModerationHub({ stats, initialReceipts, initialClaims, initialReports, initialCafes, initialUsers }: AdminModerationHubProps) {
-  const [activeTab, setActiveTab] = useState<"receipts" | "reports" | "claims" | "cafes" | "users">("receipts");
+export function AdminModerationHub({ stats, initialReceipts, initialClaims, initialReports, initialCafes, initialUsers, initialStudents }: AdminModerationHubProps) {
+  const [activeTab, setActiveTab] = useState<"receipts" | "reports" | "claims" | "cafes" | "users" | "students">("receipts");
   const [receipts, setReceipts] = useState<ReceiptItem[]>(initialReceipts);
   const [claims, setClaims] = useState<ClaimItem[]>(initialClaims);
   const [reports, setReports] = useState<ReportItem[]>(initialReports);
   const [cafes, setCafes] = useState<CafeListingItem[]>(initialCafes);
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
+  const [students, setStudents] = useState<StudentItem[]>(initialStudents);
   const [actioningId, setActioningId] = useState<string | null>(null);
   
   // Lightbox modal for full size receipt view
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // Previewer modal state for side-by-side verification
+  const [previewingImages, setPreviewingImages] = useState<string[] | null>(null);
+  const [previewingInitialIndex, setPreviewingInitialIndex] = useState<number>(0);
 
   async function handleReceiptAction(reviewId: string, action: "VERIFY" | "REJECT") {
     setActioningId(reviewId);
@@ -180,6 +195,31 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
     }
   }
 
+  async function handleStudentAction(verificationId: string, action: "APPROVE" | "REJECT") {
+    setActioningId(verificationId);
+    try {
+      const res = await fetch("/api/admin/student-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verificationId, action })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Failed to process student action");
+        return;
+      }
+
+      // Remove from list
+      setStudents(current => current.filter(s => s.id !== verificationId));
+    } catch (err) {
+      console.error(err);
+      alert("Error contacting server");
+    } finally {
+      setActioningId(null);
+    }
+  }
+
   const tabClass = (tab: typeof activeTab) => 
     `flex-1 pb-4 text-center font-black border-b-2 text-sm md:text-base transition ${
       activeTab === tab 
@@ -221,6 +261,9 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
           </button>
           <button onClick={() => setActiveTab("users")} className={tabClass("users")}>
             Users ({users.length})
+          </button>
+          <button onClick={() => setActiveTab("students")} className={tabClass("students")}>
+            Students ({students.length})
           </button>
         </nav>
       </div>
@@ -534,6 +577,74 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
           </div>
         )}
 
+        {/* STUDENTS QUEUE */}
+        {activeTab === "students" && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-black mb-4">Student Verification Queue ({students.length})</h3>
+            {students.length === 0 ? (
+              <div className="rounded-3xl bg-white p-12 text-center border border-[#e7dff0] card-shadow">
+                <p className="font-bold text-[#756a7d]">No student verification requests pending.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {students.map(s => (
+                  <div key={s.id} className="rounded-3xl bg-white border border-[#e7dff0] p-6 card-shadow grid md:grid-cols-[1fr_220px] gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs text-[#756a7d] font-bold">Student: {s.userEmail}</p>
+                        <h4 className="text-lg font-black text-[#7441b5] mt-0.5">{s.collegeName}</h4>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          disabled={actioningId === s.id}
+                          onClick={() => handleStudentAction(s.id, "APPROVE")}
+                          className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-xs transition"
+                        >
+                          Approve Student
+                        </button>
+                        <button
+                          disabled={actioningId === s.id}
+                          onClick={() => handleStudentAction(s.id, "REJECT")}
+                          className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-xs transition"
+                        >
+                          Reject Student
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ID Card Thumbnail */}
+                    <div className="flex flex-col justify-center items-center">
+                      {s.studentCardUrl ? (
+                        <button 
+                          onClick={() => {
+                            setPreviewingImages([s.studentCardUrl]);
+                            setPreviewingInitialIndex(0);
+                          }} 
+                          className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black/5 border border-[#e7dff0] flex items-center justify-center hover:opacity-95 transition group"
+                        >
+                          <img src={s.studentCardUrl} alt="student id card" className="max-h-full max-w-full object-contain" />
+                          <span className="absolute inset-0 bg-black/40 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            🔍 Compare ID Card
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="w-full aspect-[4/3] rounded-2xl border border-dashed border-[#e7dff0] bg-[#fbf9ff] flex flex-col items-center justify-center text-[#756a7d] p-3 text-center">
+                          <span className="text-xl">🎓</span>
+                          <span className="text-[10px] font-bold mt-1">No ID Card Uploaded</span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-[#756a7d] font-semibold mt-2">
+                        Submitted: {new Date(s.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </section>
 
       {/* Lightbox Modal */}
@@ -552,6 +663,18 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
             </button>
           </div>
         </div>
+      )}
+
+      {/* Side-by-Side Preview Modal */}
+      {previewingImages && (
+        <SideBySidePreview
+          images={previewingImages}
+          initialSelectedIndex={previewingInitialIndex}
+          onClose={() => {
+            setPreviewingImages(null);
+            setPreviewingInitialIndex(0);
+          }}
+        />
       )}
 
     </div>

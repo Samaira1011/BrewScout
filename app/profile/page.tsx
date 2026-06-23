@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ProfileReviewsList } from "@/components/profile-reviews-list";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { ProfileEditForm } from "@/components/profile-edit-form";
+import { StudentVerificationForm } from "@/components/student-verification-form";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,8 @@ export default async function ProfilePage() {
         },
         orderBy: { createdAt: "desc" }
       },
-      ownedCafes: true
+      ownedCafes: true,
+      studentVerification: true
     }
   });
 
@@ -65,6 +67,12 @@ export default async function ProfilePage() {
               <span className="mt-4 inline-block rounded-full bg-[#c9ff4d] text-[#21152d] px-4 py-1 text-xs font-black uppercase tracking-wider">
                 {user.role}
               </span>
+
+              {user.isStudentVerified && (
+                <span className="mt-2 inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider">
+                  🎓 Verified Student
+                </span>
+              )}
             </div>
 
             <div className="mt-8 border-t border-white/10 pt-6 space-y-4 text-sm">
@@ -98,6 +106,49 @@ export default async function ProfilePage() {
           {/* Main Content Areas */}
           <section className="space-y-8">
             
+            {/* Student College Verification Section */}
+            <div className="rounded-[2rem] bg-white p-7 card-shadow">
+              <h3 className="text-2xl font-black flex items-center gap-2">
+                <span>🎓</span> Student College Verification
+              </h3>
+              <p className="text-sm text-[#756a7d] mt-1 mb-6">
+                Verify your student status to unlock exclusive student discounts and claim a one-time 50 PTS bonus!
+              </p>
+
+              {user.isStudentVerified ? (
+                <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-5 text-sm text-emerald-800 flex items-start gap-3">
+                  <span className="text-xl">✅</span>
+                  <div>
+                    <p className="font-extrabold">You are a Verified Student!</p>
+                    <p className="mt-1 text-xs text-emerald-700/90 font-medium">
+                      Your profile has been verified as a student at <strong>{user.studentVerification?.collegeName}</strong>. 
+                      A 50 PTS bonus has been successfully credited to your account.
+                    </p>
+                  </div>
+                </div>
+              ) : user.studentVerification?.status === "PENDING" ? (
+                <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5 text-sm text-amber-800 flex items-start gap-3">
+                  <span className="text-xl">⏳</span>
+                  <div>
+                    <p className="font-extrabold">Student Verification Request Pending</p>
+                    <p className="mt-1 text-xs text-amber-700/90 font-medium">
+                      Your request for <strong>{user.studentVerification?.collegeName}</strong> is in the queue. 
+                      An administrator will review and verify your student ID card shortly.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {user.studentVerification?.status === "REJECTED" && (
+                    <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-xs font-semibold text-red-600">
+                      ⚠️ Your previous verification request was rejected. Please upload a clear student ID card photo to try again.
+                    </div>
+                  )}
+                  <StudentVerificationForm />
+                </div>
+              )}
+            </div>
+
             {/* Interactive Edit Profile Settings Form */}
             <ProfileEditForm user={{
               id: user.id,
