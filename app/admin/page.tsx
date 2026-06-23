@@ -121,6 +121,20 @@ export default async function AdminPage() {
     createdAt: rp.createdAt.toISOString()
   }));
 
+  const allUsers = await prisma.user.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
+  const mappedUsers = allUsers.map(u => ({
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    points: u.points,
+    level: u.level,
+    name: u.name || "",
+    createdAt: u.createdAt.toISOString()
+  }));
+
   return (
     <main className="min-h-screen px-5 py-12 md:px-8 bg-[#fbf9ff] text-[#21152d]">
       <div className="mx-auto max-w-7xl">
@@ -135,6 +149,7 @@ export default async function AdminPage() {
             initialClaims={mappedClaims}
             initialReports={mappedReports}
             initialCafes={mappedCafes}
+            initialUsers={mappedUsers}
           />
         </div>
       </div>

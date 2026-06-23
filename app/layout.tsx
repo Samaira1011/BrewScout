@@ -25,47 +25,42 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <HeaderSearchBar />
 
         {/* Action Links */}
-        <div className="hidden items-center gap-6 text-sm font-semibold md:flex">
-          <Link href="/search" className="text-white/75 transition hover:text-white">Discover</Link>
-          <Link href="/events-and-deals" className="text-white/75 transition hover:text-white">Events & Deals</Link>
-          <Link href="/rewards" className="text-white/75 transition hover:text-[#c9ff4d]">Rewards</Link>
-          
-          {user && (
-            <Link href="/profile/vouchers" className="text-white/75 transition hover:text-white">My Vouchers</Link>
-          )}
+        <div className="hidden items-center gap-6 text-sm font-semibold md:flex whitespace-nowrap">
+          <Link href="/search" className="text-white/75 transition hover:text-white whitespace-nowrap">Discover</Link>
+          <Link href="/events-and-deals" className="text-white/75 transition hover:text-white whitespace-nowrap">Events & Deals</Link>
 
           {user?.role === "ADMIN" && (
-            <Link href="/admin" className="text-white/75 transition hover:text-[#c9ff4d]">Admin Panel</Link>
+            <Link href="/admin" className="text-white/75 transition hover:text-[#c9ff4d] whitespace-nowrap">Admin Panel</Link>
           )}
           {(user?.role === "OWNER" || user?.role === "ADMIN") && (
-            <Link href="/dashboard" className="text-white/75 transition hover:text-white">Dashboard</Link>
+            <Link href="/dashboard" className="text-white/75 transition hover:text-white whitespace-nowrap">Dashboard</Link>
           )}
 
           {user ? (
-            <div className="flex items-center gap-4 border-l border-white/10 pl-4">
+            <div className="flex items-center gap-4 border-l border-white/10 pl-4 whitespace-nowrap">
               {/* VibePoints Badge */}
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#c9ff4d] bg-[#c9ff4d]/10 border border-[#c9ff4d]/25 px-2.5 py-1 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#c9ff4d] bg-[#c9ff4d]/10 border border-[#c9ff4d]/25 px-2.5 py-1 rounded-full whitespace-nowrap">
                 {user.points} PTS • {user.level}
               </span>
 
               {/* Profile Shortcut */}
-              <Link href="/profile" className="text-white/75 transition hover:text-[#c9ff4d] flex items-center gap-2 shrink-0">
+              <Link href="/profile" className="text-white/75 transition hover:text-[#c9ff4d] flex items-center gap-2 shrink-0 whitespace-nowrap">
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-[#ff6679] text-xs font-black text-white uppercase">
                   {user.email.charAt(0)}
                 </span>
                 Profile
               </Link>
               
-              <Link href="/search" className="rounded-full bg-[#ff6679] hover:bg-[#eb4e64] px-4 py-2 text-xs font-black text-white transition text-center shrink-0">
+              <Link href="/search" className="rounded-full bg-[#ff6679] hover:bg-[#eb4e64] px-4 py-2 text-xs font-black text-white transition text-center shrink-0 whitespace-nowrap">
                 Write Review
               </Link>
               
-              <a href="/api/auth/signout" className="rounded-full border border-white/20 px-4 py-2 text-xs text-white transition hover:bg-white/10 shrink-0">Sign out</a>
+              <a href="/api/auth/signout" className="rounded-full border border-white/20 px-4 py-2 text-xs text-white transition hover:bg-white/10 shrink-0 whitespace-nowrap">Sign out</a>
             </div>
           ) : (
-            <div className="flex items-center gap-4 border-l border-white/10 pl-4">
-              <Link href="/auth/signin" className="text-white/75 transition hover:text-white">Sign in</Link>
-              <Link href="/auth/register" className="rounded-full bg-white px-5 py-2.5 text-[#261336] transition hover:bg-[#c9ff4d]">Join VibeCheck</Link>
+            <div className="flex items-center gap-4 border-l border-white/10 pl-4 whitespace-nowrap">
+              <Link href="/auth/signin" className="text-white/75 transition hover:text-white whitespace-nowrap">Sign in</Link>
+              <Link href="/auth/register" className="rounded-full bg-white px-5 py-2.5 text-[#261336] transition hover:bg-[#c9ff4d] whitespace-nowrap">Join VibeCheck</Link>
             </div>
           )}
         </div>

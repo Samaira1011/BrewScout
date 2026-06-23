@@ -47,21 +47,33 @@ interface CafeListingItem {
   createdAt: string;
 }
 
+interface UserItem {
+  id: string;
+  email: string;
+  role: string;
+  points: number;
+  level: string;
+  name: string;
+  createdAt: string;
+}
+
 interface AdminModerationHubProps {
   stats: AdminStats;
   initialReceipts: ReceiptItem[];
   initialClaims: ClaimItem[];
   initialReports: ReportItem[];
   initialCafes: CafeListingItem[];
+  initialUsers: UserItem[];
 }
 
 
-export function AdminModerationHub({ stats, initialReceipts, initialClaims, initialReports, initialCafes }: AdminModerationHubProps) {
-  const [activeTab, setActiveTab] = useState<"receipts" | "reports" | "claims" | "cafes">("receipts");
+export function AdminModerationHub({ stats, initialReceipts, initialClaims, initialReports, initialCafes, initialUsers }: AdminModerationHubProps) {
+  const [activeTab, setActiveTab] = useState<"receipts" | "reports" | "claims" | "cafes" | "users">("receipts");
   const [receipts, setReceipts] = useState<ReceiptItem[]>(initialReceipts);
   const [claims, setClaims] = useState<ClaimItem[]>(initialClaims);
   const [reports, setReports] = useState<ReportItem[]>(initialReports);
   const [cafes, setCafes] = useState<CafeListingItem[]>(initialCafes);
+  const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [actioningId, setActioningId] = useState<string | null>(null);
   
   // Lightbox modal for full size receipt view
@@ -194,7 +206,7 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
 
       {/* Tabs */}
       <div className="border-b border-[#e7dff0]">
-        <nav className="flex gap-4 max-w-xl mx-auto">
+        <nav className="flex gap-4 max-w-2xl mx-auto flex-wrap">
           <button onClick={() => setActiveTab("receipts")} className={tabClass("receipts")}>
             Reviews ({receipts.length})
           </button>
@@ -206,6 +218,9 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
           </button>
           <button onClick={() => setActiveTab("cafes")} className={tabClass("cafes")}>
             Listings ({cafes.length})
+          </button>
+          <button onClick={() => setActiveTab("users")} className={tabClass("users")}>
+            Users ({users.length})
           </button>
         </nav>
       </div>
@@ -434,6 +449,79 @@ export function AdminModerationHub({ stats, initialReceipts, initialClaims, init
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* USERS QUEUE */}
+        {activeTab === "users" && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-black mb-4">Registered Users ({users.length})</h3>
+            {users.length === 0 ? (
+              <div className="rounded-3xl bg-white p-12 text-center border border-[#e7dff0] card-shadow">
+                <p className="font-bold text-[#756a7d]">No users registered in the system.</p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-3xl border border-[#e7dff0] bg-white card-shadow">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-[#e7dff0]">
+                    <thead className="bg-[#fcfaff]">
+                      <tr>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider text-[#756a7d]">User</th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider text-[#756a7d]">Role</th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider text-[#756a7d]">Points</th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider text-[#756a7d]">Tier</th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider text-[#756a7d]">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e7dff0]/60 bg-white">
+                      {users.map(u => (
+                        <tr key={u.id} className="hover:bg-[#fbf9ff]/50 transition">
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#ff6679] text-xs font-black text-white uppercase">
+                                {u.email.charAt(0)}
+                              </span>
+                              <div>
+                                <p className="text-sm font-black text-[#21152d]">{u.name || "No name set"}</p>
+                                <p className="text-xs text-[#756a7d]">{u.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span className={`inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+                              u.role === "ADMIN" 
+                                ? "bg-purple-100 text-purple-700 border border-purple-200" 
+                                : u.role === "OWNER" 
+                                  ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                  : "bg-blue-100 text-blue-700 border border-blue-200"
+                            }`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-extrabold text-[#21152d]">
+                            {u.points} PTS
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
+                              u.level === "GOLD" 
+                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                : u.level === "SILVER"
+                                  ? "bg-slate-100 text-slate-700 border-slate-200"
+                                  : "bg-amber-800/10 text-amber-900 border-amber-900/20"
+                            }`}>
+                              {u.level}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-xs text-[#756a7d] font-semibold">
+                            {new Date(u.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
