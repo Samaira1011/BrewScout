@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/require-role";
 import { NextRequest, NextResponse } from "next/server";
+import { sendWelcomeEmail } from "@/lib/mailer";
 
 export async function POST(request: NextRequest) {
   const { token, error } = await requireRole(request, "ADMIN");
@@ -39,6 +40,11 @@ export async function POST(request: NextRequest) {
           data: { role: "OWNER" }
         })
       ]);
+
+      // Send welcome email with cafe/restaurant name to the newly approved business owner
+      sendWelcomeEmail(claim.requester.email, "OWNER", claim.cafe.name).catch((err) =>
+        console.error("admin/claims/route.ts: Welcome email dispatch failure", err)
+      );
 
       return NextResponse.json({ success: true, status: "APPROVED" });
     }

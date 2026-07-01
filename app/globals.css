@@ -26,3 +26,55 @@ button, input { font: inherit; }
 }
 
 .card-shadow { box-shadow: 0 18px 50px rgba(47, 27, 77, .12); }
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(6deg); }
+  50% { transform: translateY(-12px) rotate(7deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(-6deg); }
+  50% { transform: translateY(-8px) rotate(-5deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 5s ease-in-out infinite;
+}
+
+.card-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-glow:hover {
+  box-shadow: 0 20px 40px rgba(201, 255, 77, 0.15);
+  border-color: rgba(201, 255, 77, 0.4);
+  transform: translateY(-4px);
+}
+
+.card-glow-pink:hover {
+  box-shadow: 0 20px 40px rgba(255, 102, 121, 0.15);
+  border-color: rgba(255, 102, 121, 0.4);
+  transform: translateY(-4px);
+}
+
+.card-glow-purple:hover {
+  box-shadow: 0 20px 40px rgba(185, 147, 255, 0.15);
+  border-color: rgba(185, 147, 255, 0.4);
+  transform: translateY(-4px);
+}
+
+.card-glow-yellow:hover {
+  box-shadow: 0 20px 40px rgba(255, 214, 107, 0.15);
+  border-color: rgba(255, 214, 107, 0.4);
+  transform: translateY(-4px);
+}
+
+/* Base transitions for smooth width updates on progress bars */
+.transition-width {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+

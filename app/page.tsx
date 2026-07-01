@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { InteractiveVibeHero } from "@/components/interactive-vibe-hero";
 
 const vibes = [
   { name: "Deep focus", icon: "01", color: "bg-[#c9ff4d]" },
@@ -7,6 +8,13 @@ const vibes = [
   { name: "Main character", icon: "03", color: "bg-[#b993ff]" },
   { name: "Late-night", icon: "04", color: "bg-[#ffd66b]" },
 ];
+
+const glowClasses: Record<string, string> = {
+  "Deep focus": "card-glow text-[#21152d]",
+  "Date-worthy": "card-glow-pink text-white",
+  "Main character": "card-glow-purple text-white",
+  "Late-night": "card-glow-yellow text-[#21152d]",
+};
 
 export default async function Home() {
   const verifiedCafes = await prisma.cafePage.findMany({
@@ -50,16 +58,8 @@ export default async function Home() {
           </form>
           <p className="mt-4 text-sm text-white/50">Popular: work-friendly, rooftop, brunch, open late</p>
         </div>
-        <div className="relative hidden min-h-[430px] lg:block">
-          <div className="absolute right-10 top-0 w-72 rotate-6 rounded-[2rem] bg-[#c9ff4d] p-6 text-[#21152d] shadow-2xl">
-            <p className="text-xs font-black uppercase tracking-widest">Vibe score</p>
-            <p className="mt-7 text-7xl font-black tracking-tighter">9.4</p>
-            <p className="mt-2 font-bold">Quiet, sunny, excellent playlists.</p>
-          </div>
-          <div className="absolute bottom-5 left-0 w-80 -rotate-6 rounded-[2rem] border border-white/20 bg-white/10 p-6 backdrop-blur-xl">
-            <div className="mb-20 flex justify-between text-xs font-bold uppercase tracking-widest"><span>Verified visit</span><span>★★★★★</span></div>
-            <p className="text-xl font-bold">&quot;Exactly where I want to spend a slow Sunday.&quot;</p>
-          </div>
+        <div className="relative hidden lg:block w-full">
+          <InteractiveVibeHero />
         </div>
       </div>
     </section>
@@ -70,7 +70,7 @@ export default async function Home() {
         <Link href="/search" className="font-bold text-[#7441b5]">See every vibe →</Link>
       </div>
       <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{vibes.map(vibe =>
-        <Link key={vibe.name} href={`/search?vibe=${encodeURIComponent(vibe.name)}`} className={`${vibe.color} group rounded-[1.7rem] p-6 transition hover:-translate-y-1 card-shadow`}>
+        <Link key={vibe.name} href={`/search?vibe=${encodeURIComponent(vibe.name)}`} className={`group rounded-[1.7rem] p-6 transition border border-transparent card-shadow ${glowClasses[vibe.name] || 'card-glow'} ${vibe.color}`}>
           <span className="text-xs font-black opacity-50">{vibe.icon}</span>
           <h3 className="mt-14 text-2xl font-black tracking-tight">{vibe.name}</h3>
           <p className="mt-2 text-sm font-semibold opacity-60">Find your perfect spot →</p>
