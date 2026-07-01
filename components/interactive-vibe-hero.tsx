@@ -36,8 +36,8 @@ const vibePresets: Record<VibeKey, VibeDetails> = {
     stats: {
       wifi: { label: "WiFi Speed", val: 98, color: "bg-[#c9ff4d]" },
       noise: { label: "Quietness", val: 92, color: "bg-[#ff8a9a]" },
-      seating: { label: "Desk Space", val: 90, color: "bg-[#b993ff]" },
-      coffee: { label: "Espresso Quality", val: 88, color: "bg-[#ffd66b]" },
+      seating: { label: "Aesthetics", val: 90, color: "bg-[#b993ff]" },
+      coffee: { label: "Coffee Quality", val: 88, color: "bg-[#ffd66b]" },
     }
   },
   brunch: {
@@ -54,7 +54,7 @@ const vibePresets: Record<VibeKey, VibeDetails> = {
       wifi: { label: "WiFi Speed", val: 65, color: "bg-[#c9ff4d]" },
       noise: { label: "Quietness", val: 40, color: "bg-[#ff8a9a]" },
       seating: { label: "Aesthetics", val: 96, color: "bg-[#b993ff]" },
-      coffee: { label: "Artisan Brews", val: 94, color: "bg-[#ffd66b]" },
+      coffee: { label: "Coffee Quality", val: 94, color: "bg-[#ffd66b]" },
     }
   },
   music: {
@@ -69,9 +69,9 @@ const vibePresets: Record<VibeKey, VibeDetails> = {
     stars: 5,
     stats: {
       wifi: { label: "WiFi Speed", val: 78, color: "bg-[#c9ff4d]" },
-      noise: { label: "Lofi Beats", val: 85, color: "bg-[#ff8a9a]" },
-      seating: { label: "Velvet Seating", val: 92, color: "bg-[#b993ff]" },
-      coffee: { label: "Single Origin", val: 98, color: "bg-[#ffd66b]" },
+      noise: { label: "Quietness", val: 85, color: "bg-[#ff8a9a]" },
+      seating: { label: "Aesthetics", val: 92, color: "bg-[#b993ff]" },
+      coffee: { label: "Coffee Quality", val: 98, color: "bg-[#ffd66b]" },
     }
   },
   late: {
@@ -86,9 +86,9 @@ const vibePresets: Record<VibeKey, VibeDetails> = {
     stars: 4,
     stats: {
       wifi: { label: "WiFi Speed", val: 80, color: "bg-[#c9ff4d]" },
-      noise: { label: "Cosy Lighting", val: 90, color: "bg-[#ff8a9a]" },
-      seating: { label: "Lounge Couches", val: 95, color: "bg-[#b993ff]" },
-      coffee: { label: "Late Brews", val: 85, color: "bg-[#ffd66b]" },
+      noise: { label: "Quietness", val: 90, color: "bg-[#ff8a9a]" },
+      seating: { label: "Aesthetics", val: 95, color: "bg-[#b993ff]" },
+      coffee: { label: "Coffee Quality", val: 85, color: "bg-[#ffd66b]" },
     }
   }
 };
